@@ -20,3 +20,12 @@ OPENID_PROVIDERS = [
 	{'name': 'Google', 'url':"https://www.google.com/accounts/o8/id"},
 	{'name': 'Yahoo', 'url':"https://me.yahoo.com"},
 ]
+
+# mail server settings
+MAIL_SERVER = '127.0.0.1'
+MAIL_PORT = 25
+MAIL_USERNAME = "gwengww"
+MAIL_PASSWORD = None
+
+# administrator list
+ADMINS = ['admin@microblog.com']
