@@ -1,13 +1,37 @@
 {% extends "base.html" %}
 {% block content %}
-	{% if current_user.is_authenticated() and not current_user.is_anonymous() %}
+	{% if current_user.is_authenticated and not current_user.is_anonymous() %}
 	<h1>Hi, {{ user.nickname}}!</h1>
-	{% for post in posts %}
-	<div><p>{{post.author.nickname}} says: <b>{{post.body}}</b></p></div>
+	<form action="" method="post" name="post">
+		{{ form.hidden_tag() }}
+		<table>
+			<tr>
+				<td>Say Something:</td>
+				<td>{{ form.post(size=30, maxlength=140)}}</td>
+				<td>
+					{% for error in form.post.erros %}
+					<span style="color: red">[{{ error }}]</span><br>
+					{% endfor %}
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td><input type="submit" value="Post!"></td>
+				<td></td>
+			</tr>
+		</table>
+	</form>
+	<div>
+	{% for post in posts.items %}
+		{% include 'post.html'%}
 	{% endfor %}
+	{% if posts.has_prev %}<a href="{{ url_for('index', page=posts.prev_num) }}">&lt;&lt; Newer posts</a>
+	{% else %}&lt;&lt; Newer posts{% endif %} | 
+	{% if posts.has_next %}<a href="{{ url_for('index', page=posts.next_num) }}">Older posts &gt;&gt;</a>{% else %}Older posts &gt;&gt;{% endif %}
 	{% else %}
 	<h2>I don't know you!</h2>
             <p><a href="{{ url_for('oauth_authorize', provider='facebook') }}">Login with Facebook</a></p>
             <p><a href="{{ url_for('oauth_authorize', provider='twitter') }}">Login with Twitter</a></p>
 	{% endif %}
+	</div>
 {% endblock %}

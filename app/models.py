@@ -3,13 +3,13 @@ from flask_login import UserMixin
 from hashlib import md5
 
 followers = db.Table('followers',
-        db.Column('follower_id', db.Integer, db.ForeignKey('users.id')),
-        db.Column('followed_id', db.Integer, db.ForeignKey('users.id'))
+        db.Column('follower_id', db.Integer, db.ForeignKey('user.id')),
+        db.Column('followed_id', db.Integer, db.ForeignKey('user.id'))
     )
 
 
 class User(UserMixin, db.Model):
-    __tablename__ = 'users'
+    __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     social_id = db.Column(db.String(64), nullable=False, unique=True)
     nickname = db.Column(db.String(64), index=True, unique=True)
@@ -20,7 +20,7 @@ class User(UserMixin, db.Model):
     followed = db.relationship('User',
                                 secondary=followers,
                                 primaryjoin=(followers.c.follower_id == id),
-                                secondaryjoin=(followers.c.follower_id == id),
+                                secondaryjoin=(followers.c.followed_id == id),
                                 backref=db.backref('followers', lazy='dynamic'),
                                 lazy='dynamic'
                                 )
@@ -28,6 +28,7 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return '<User %r>' % (self.nickname)
 
+    # @property
     def is_authenticated(self):
         return True
 
@@ -35,6 +36,7 @@ class User(UserMixin, db.Model):
     def is_active(self):
         return True
 
+    # @property
     def is_anonymous(self):
         return False
 
@@ -65,27 +67,43 @@ class User(UserMixin, db.Model):
             # print("Not following " + str(user))
             self.followed.append(user)
             return self
-        return None
     
     def unfollow(self, user):
         if self.is_following(user):
             # print("Following " + str(user))
             self.followed.remove(user)
             return self
-        return None
 
     def is_following(self, user):
         count = self.followed.filter(followers.c.followed_id == user.id).count()
         # print("Found " + str(count) + " followed")
         return count > 0
 
+    def followed_posts(self):
+        return Post.query.join(followers, (followers.c.followed_id == \
+                    Post.user_id)).filter(followers.c.follower_id == \
+                    self.id).order_by(Post.timestamp.desc())
+
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     body = db.Column(db.String(140))
     timestamp = db.Column(db.DateTime)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     def __repr__(self):
         return '<Post %r>' % (self.body)
 
+class Deal(db.Model):
+    __tablename__ = 'deals'
+    id = db.Column(db.Integer, primary_key=True)
+    category = db.Column(db.String(32), index=True)
+    dealName = db.Column(db.String(140), index=True)
+    startTime = db.Column(db.DateTime)
+    endTime = db.Column(db.DateTime)
+    url = db.Column(db.String(300))
+    price = db.Column(db.Float)
+    expired = db.Column(db.Boolean)
+
+    def __repr__(self):
+        return '%r: %r' % (self.category, self.dealName)
 
